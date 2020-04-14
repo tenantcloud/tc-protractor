@@ -17,6 +17,8 @@ let configParser = new configParser_1.ConfigParser();
 configParser.addFileConfig('./protractor.conf.js');
 let config = configParser.getConfig();
 let scheduler = new taskScheduler_1.TaskScheduler(config);
+let clipboard = new Clipboard();
+
 
 /**
  * A runner for running a specified task (capabilities + specs).
@@ -40,19 +42,19 @@ class TaskRunner extends events_1.EventEmitter {
 	}
 
 	addSpecsCount(callback) {
-		let stepCount = Clipboard.getCount();
+		let stepCount = clipboard.getCount();
 
-		if (Clipboard.getActiveSpecs() === null) {
-			Clipboard.setActiveSpecs(scheduler.allSpecs.length);
+		if (clipboard.getActiveSpecs() === null) {
+			clipboard.setActiveSpecs(scheduler.allSpecs.length);
 		}
 
 		if (stepCount % 120 === 0 && stepCount !== 0) {
 			let allSpecs = scheduler.allSpecs.length,
-				activeSpecs = Clipboard.getActiveSpecs();
+				activeSpecs = clipboard.getActiveSpecs();
 
 			process.stdout.write(`      ${activeSpecs}/${allSpecs} test(s) left \n`);
 		}
-		Clipboard.increaseSpecsCount();
+		clipboard.increaseSpecsCount();
 		callback();
 	}
 

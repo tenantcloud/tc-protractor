@@ -3,7 +3,7 @@ require('@babel/register')({
 	presets: [['@babel/preset-env']],
 	plugins: ['@babel/plugin-transform-runtime'],
 });
-class Clipboard {
+export class Clipboard {
 	constructor() {
 		this.countDots = 0;
 		this.activeSpecs = null;
@@ -32,7 +32,3 @@ class Clipboard {
 		this.activeSpecs = this.activeSpecs - 1;
 	}
 }
-
-let clipboard = new Clipboard();
-
-export { clipboard as Clipboard };
