@@ -1,3 +1,8 @@
+'use strict';
+require('@babel/register')({
+	presets: [['@babel/preset-env']],
+	plugins: ['@babel/plugin-transform-runtime'],
+});
 class Clipboard {
 	constructor() {
 		this.countDots = 0;
