@@ -40,7 +40,7 @@
     "email": "ju.ralph@gmail.com"
   },
   "bin": {
-    "protractor": "bin/protractor",
+    "protractor": "bin/tc-protractor",
     "webdriver-manager": "bin/webdriver-manager"
   },
   "bugs": {
