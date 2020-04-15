@@ -20,9 +20,9 @@
   "_requested": {
     "type": "tag",
     "registry": true,
-    "raw": "protractor",
-    "name": "protractor",
-    "escapedName": "protractor",
+    "raw": "tc-protractor",
+    "name": "tc-protractor",
+    "escapedName": "tc-protractor",
     "rawSpec": "",
     "saveSpec": null,
     "fetchSpec": "latest"
@@ -33,14 +33,14 @@
   ],
   "_resolved": "https://registry.npmjs.org/protractor/-/protractor-5.4.3.tgz",
   "_shasum": "35f050741e404a45868618ea648745d89af31683",
-  "_spec": "protractor",
+  "_spec": "tc-protractor",
   "_where": "/Users/user/PhpstormProjects/untitled2",
   "author": {
     "name": "Julie Ralph",
     "email": "ju.ralph@gmail.com"
   },
   "bin": {
-    "protractor": "bin/tc-protractor",
+    "tc-protractor": "bin/tc-protractor",
     "webdriver-manager": "bin/webdriver-manager"
   },
   "bugs": {
