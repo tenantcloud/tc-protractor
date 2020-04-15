@@ -28,6 +28,4 @@ class Clipboard {
 	}
 }
 
-let clipboard = new Clipboard();
-
-exports.Clipboard = clipboard;
+module.exports = Clipboard;

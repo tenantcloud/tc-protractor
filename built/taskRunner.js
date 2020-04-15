@@ -1,8 +1,4 @@
 'use strict';
-require('@babel/register')({
-	presets: [['@babel/preset-env']],
-	plugins: ['@babel/plugin-transform-runtime'],
-});
 Object.defineProperty(exports, '__esModule', { value: true });
 const child_process = require('child_process');
 const events_1 = require('events');
@@ -11,13 +7,12 @@ const configParser_1 = require('./configParser');
 const runner_1 = require('./runner');
 const taskLogger_1 = require('./taskLogger');
 const taskScheduler_1 = require('./taskScheduler');
-const { Clipboard } = require('./clipboard');
+const clipboard = require('./clipboard-mediator.js');
 
 let configParser = new configParser_1.ConfigParser();
 configParser.addFileConfig('./protractor.conf.js');
 let config = configParser.getConfig();
 let scheduler = new taskScheduler_1.TaskScheduler(config);
-let clipboard = new Clipboard();
 
 
 /**

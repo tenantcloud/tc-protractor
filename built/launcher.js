@@ -16,8 +16,7 @@ const taskScheduler_1 = require('./taskScheduler');
 const helper = require('./util');
 let logger = new logger_1.Logger('launcher');
 let RUNNERS_FAILED_EXIT_CODE = 100;
-const { Clipboard } = require( './clipboard');
-let clipboard = new Clipboard();
+const clipboard = require('./clipboard-mediator.js');
 /**
  * Keeps track of a list of task results. Provides method to add a new
  * result, aggregate the results into a summary, count failures,
