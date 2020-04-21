@@ -86,7 +86,7 @@ class TaskResults {
 			}
 		});
 
-      logger.info(os.EOL);
+      logger.info('\n');
 
 		if (specFailures && processFailures) {
 			logger.info(
