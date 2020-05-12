@@ -9,7 +9,7 @@ class Clipboard {
 	}
 
 	increaseSpecsCount() {
-		this.countDots += 1;
+		this.countDots ++;
 	}
 
 	setActiveSpecs(allSpecs) {
@@ -24,7 +24,7 @@ class Clipboard {
 		if(countActiveTasks !== 0){
 			process.stdout.write('.');
 		}
-		this.activeSpecs = this.activeSpecs - 1;
+		this.activeSpecs --;
 	}
 }
 
