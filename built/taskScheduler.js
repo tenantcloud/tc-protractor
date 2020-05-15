@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const configParser_1 = require("./configParser");
+const clipboard = require('./clipboard-mediator.js');
 /**
  * The taskScheduler keeps track of the spec files that needs to run next
  * and which task is running what.
@@ -80,6 +81,10 @@ class TaskScheduler {
             let queue = this.taskQueues[rotatedIndex];
             if (queue.numRunningInstances < queue.maxInstance &&
                 queue.specsIndex < queue.specLists.length) {
+                if (clipboard.getActiveSpecs() === null) {
+                    clipboard.setActiveSpecs(queue.specLists.length);
+                    clipboard.setAllSpecs(queue.specLists.length);
+                }
                 this.rotationIndex = rotatedIndex + 1;
                 ++queue.numRunningInstances;
                 let taskId = '' + rotatedIndex + 1;

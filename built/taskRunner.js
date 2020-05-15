@@ -38,22 +38,8 @@ class TaskRunner extends events_1.EventEmitter {
 	addSpecsCount(callback) {
 		let stepCount = clipboard.getCount();
 
-		if (clipboard.getActiveSpecs() === null) {
-			getActiveSpecs();
-
-			function getActiveSpecs() {
-				let activeSpecs = scheduler.allSpecs.length;
-
-				if (activeSpecs !== 0) {
-					clipboard.setActiveSpecs(activeSpecs);
-				} else {
-					getActiveSpecs();
-				}
-			}
-		}
-
 		if (stepCount % 120 === 0 && stepCount !== 0) {
-			let allSpecs = scheduler.allSpecs.length,
+			let allSpecs = clipboard.getAllSpecs(),
 				activeSpecs = clipboard.getActiveSpecs();
 
 			process.stdout.write(`      ${activeSpecs}/${allSpecs} test(s) left \n`);

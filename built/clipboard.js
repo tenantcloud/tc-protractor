@@ -2,6 +2,7 @@ class Clipboard {
 	constructor() {
 		this.countDots = 0;
 		this.activeSpecs = null;
+		this.allSpecs = 0;
 	}
 
 	getCount() {
@@ -9,7 +10,7 @@ class Clipboard {
 	}
 
 	increaseSpecsCount() {
-		this.countDots ++;
+		this.countDots++;
 	}
 
 	setActiveSpecs(allSpecs) {
@@ -21,10 +22,18 @@ class Clipboard {
 	}
 
 	decreaseSpecsCount(countActiveTasks) {
-		if(countActiveTasks !== 0){
+		if (countActiveTasks !== 0) {
 			process.stdout.write('.');
 		}
-		this.activeSpecs --;
+		this.activeSpecs--;
+	}
+
+	setAllSpecs(count) {
+		this.allSpecs = count;
+	}
+
+	getAllSpecs() {
+		return this.allSpecs;
 	}
 }
 
