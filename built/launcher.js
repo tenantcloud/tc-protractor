@@ -277,7 +277,6 @@ let initFn = function(configFile, additionalConfig) {
 
 							if (duration < 3e4) {
 								result.exitCode = 'quick finish';
-								clipboard.resetCount();
 							}
 
 							if (result.exitCode && !result.failedCount) {
