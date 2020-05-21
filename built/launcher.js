@@ -17,6 +17,9 @@ const helper = require('./util');
 let logger = new logger_1.Logger('launcher');
 let RUNNERS_FAILED_EXIT_CODE = 100;
 const clipboard = require('./clipboard-mediator.js');
+const execution_metrics_1 = require('./execution-metrics');
+let metrics = new execution_metrics_1.ExecutionMetrics();
+
 /**
  * Keeps track of a list of task results. Provides method to add a new
  * result, aggregate the results into a summary, count failures,
@@ -67,6 +70,8 @@ class TaskResults {
 
 			if (result.failedCount) {
 				spaceCount = 26 - result.failedCount.toString().length - shortName.length;
+			} else if (result.exitCode === 'quick finish') {
+				spaceCount = 34 - result.exitCode.toString().length - shortName.length;
 			} else if (result.exitCode !== 0) {
 				spaceCount = 18 - result.exitCode.toString().length - shortName.length;
 			} else {
@@ -79,6 +84,8 @@ class TaskResults {
 
 			if (result.failedCount) {
 				logger.info(`${shortName} failed ${result.failedCount} test(s)${emptyString}('${shortTestPath}')`);
+			} else if (result.exitCode === 'quick finish') {
+				logger.info(`${shortName} failed ${result.exitCode}${emptyString}('${shortTestPath}')`);
 			} else if (result.exitCode !== 0) {
 				logger.info(`${shortName} failed with exit code: ${result.exitCode}${emptyString}('${shortTestPath}')`);
 			} else {
@@ -86,7 +93,7 @@ class TaskResults {
 			}
 		});
 
-      logger.info('');
+		logger.info('');
 
 		if (specFailures && processFailures) {
 			logger.info(
@@ -260,12 +267,24 @@ let initFn = function(configFile, additionalConfig) {
 				let task = scheduler.nextTask();
 				if (task) {
 					let taskRunner = new taskRunner_1.TaskRunner(configFile, additionalConfig, task, forkProcess);
+					metrics.start(task.taskId);
 					taskRunner
 						.run()
 						.then(result => {
+							metrics.stop(result.taskId);
+
+							let duration = metrics.duration;
+
+							if (duration < 3e4) {
+								console.error(`\nThe test ended too quickly -- ${result.specs[0]}`);
+								result.exitCode = 'quick finish';
+								clipboard.resetCount();
+							}
+
 							if (result.exitCode && !result.failedCount) {
 								// logger.error('Runner process exited unexpectedly with error code: ' + result.exitCode);
 							}
+
 							taskResults_.add(result);
 							task.done();
 							createNextTaskRunner();

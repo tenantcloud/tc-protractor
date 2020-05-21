@@ -9,6 +9,10 @@ class Clipboard {
 		return this.countDots;
 	}
 
+	resetCount() {
+		this.countDots = 0;
+	}
+
 	increaseSpecsCount() {
 		this.countDots++;
 	}

@@ -85,6 +85,7 @@ class TaskScheduler {
                     clipboard.setActiveSpecs(queue.specLists.length);
                     clipboard.setAllSpecs(queue.specLists.length);
                 }
+
                 this.rotationIndex = rotatedIndex + 1;
                 ++queue.numRunningInstances;
                 let taskId = '' + rotatedIndex + 1;
