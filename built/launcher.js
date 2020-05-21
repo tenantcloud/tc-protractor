@@ -276,7 +276,6 @@ let initFn = function(configFile, additionalConfig) {
 							let duration = metrics.duration;
 
 							if (duration < 3e4) {
-								console.error(`\nThe test ended too quickly -- ${result.specs[0]}`);
 								result.exitCode = 'quick finish';
 								clipboard.resetCount();
 							}
