@@ -273,10 +273,10 @@ let initFn = function(configFile, additionalConfig) {
 						.then(result => {
 							metrics.stop(result.taskId);
 
-							let duration = metrics.duration;
+							let duration = metrics.getDuration(result.taskId);
 
 							if (duration < 3e4) {
-								// result.exitCode = 'quick finish';
+								result.exitCode = 'quick finish';
 							}
 
 							if (result.exitCode && !result.failedCount) {

@@ -12,6 +12,9 @@ let ExecutionMetrics = (function() {
         buff[taskId].duration = new Date().getTime() - buff[taskId].startTime;
 		this.duration = buff[taskId].duration;
 	};
+	ExecutionMetrics.prototype.getDuration = function(taskId) {
+		return buff[taskId].duration;
+	};
 	return ExecutionMetrics;
 })();
 exports.ExecutionMetrics = ExecutionMetrics;
