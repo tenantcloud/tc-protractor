@@ -276,7 +276,7 @@ let initFn = function(configFile, additionalConfig) {
 							let duration = metrics.duration;
 
 							if (duration < 3e4) {
-								result.exitCode = 'quick finish';
+								// result.exitCode = 'quick finish';
 							}
 
 							if (result.exitCode && !result.failedCount) {
