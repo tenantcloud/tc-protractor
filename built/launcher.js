@@ -17,8 +17,6 @@ const helper = require('./util');
 let logger = new logger_1.Logger('launcher');
 let RUNNERS_FAILED_EXIT_CODE = 100;
 const clipboard = require('./clipboard-mediator.js');
-const execution_metrics_1 = require('./execution-metrics');
-let metrics = new execution_metrics_1.ExecutionMetrics();
 
 /**
  * Keeps track of a list of task results. Provides method to add a new
