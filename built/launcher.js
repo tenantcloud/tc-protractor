@@ -268,14 +268,16 @@ let initFn = function(configFile, additionalConfig) {
 					taskRunner
 						.run()
 						.then(result => {
-							let duration = 0;
+							if (result.exitCode === 0) {
+								let duration = 0;
 
-							for (let key of result.specResults) {
-								duration += key['duration'];
-							}
+								for (let key of result.specResults) {
+									duration += key['duration'];
+								}
 
-							if (duration < 3e4) {
-								result.exitCode = 'quick finish';
+								if (duration < 3e4) {
+									result.exitCode = 'quick finish';
+								}
 							}
 
 							if (result.exitCode && !result.failedCount) {
