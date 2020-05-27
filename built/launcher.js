@@ -267,13 +267,14 @@ let initFn = function(configFile, additionalConfig) {
 				let task = scheduler.nextTask();
 				if (task) {
 					let taskRunner = new taskRunner_1.TaskRunner(configFile, additionalConfig, task, forkProcess);
-					metrics.start(task.taskId);
 					taskRunner
 						.run()
 						.then(result => {
-							metrics.stop(result.taskId);
+							let duration = 0;
 
-							let duration = metrics.getDuration(result.taskId);
+							for (let key of result.specResults) {
+								duration += key['duration'];
+							}
 
 							if (duration < 3e4) {
 								result.exitCode = 'quick finish';
