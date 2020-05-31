@@ -276,6 +276,12 @@ let initFn = function(configFile, additionalConfig) {
 								}
 
 								if (duration < 3e4) {
+									console.log(
+										`\n ${JSON.stringify(result.specResults).slice(
+											0,
+											1000
+										)}\n`
+									);
 									result.exitCode = 'quick finish';
 								}
 							}
