@@ -96,10 +96,6 @@ class TaskRunner extends events_1.EventEmitter {
 						taskLogger.peek();
 					}
 
-					if (m.event === 'testsDone') {
-						runResults.specResults = m.results.specResults;
-					}
-
 					this.addSpecsCount(() => {
 						switch (m.event) {
 							case 'testPass':
