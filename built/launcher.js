@@ -275,13 +275,7 @@ let initFn = function(configFile, additionalConfig) {
 									duration += key['duration'];
 								}
 
-								if (duration < 3e4) {
-									console.log(
-										`\n ${duration} && ${JSON.stringify(result.specResults).slice(
-											0,
-											15000
-										)}\n`
-									);
+								if (duration < 100) {
 									result.exitCode = 'quick finish';
 								}
 							}
