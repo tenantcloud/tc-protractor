@@ -275,7 +275,7 @@ let initFn = function(configFile, additionalConfig) {
 									duration += key['duration'];
 								}
 
-								if (duration < 100) {
+								if (duration < 10) {
 									result.exitCode = 'quick finish';
 								}
 							}
