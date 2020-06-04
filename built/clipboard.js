@@ -22,9 +22,6 @@ class Clipboard {
 	}
 
 	decreaseSpecsCount(countActiveTasks) {
-		if (countActiveTasks !== 0) {
-			process.stdout.write('.');
-		}
 		this.activeSpecs--;
 	}
 

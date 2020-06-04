@@ -105,6 +105,7 @@ class TaskRunner extends events_1.EventEmitter {
 								process.stdout.write('F');
 								break;
 							case 'testsDone':
+								process.stdout.write('.');
 								runResults.failedCount = m.results.failedCount;
 								runResults.specResults = m.results.specResults;
 								break;
