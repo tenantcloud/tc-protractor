@@ -81,7 +81,7 @@ class TaskResults {
 			}
 
 			if (result.failedCount) {
-				logger.info(`${shortName} failed ${result.failedCount} test(s)${emptyString}('${shortTestPath}')`);
+				logger.info(`${shortName} failed ${result.failedCount} step(s)${emptyString}('${shortTestPath}')`);
 			} else if (result.exitCode === 'quick finish') {
 				logger.info(`${shortName} failed ${result.exitCode}${emptyString}('${shortTestPath}')`);
 			} else if (result.exitCode !== 0) {
