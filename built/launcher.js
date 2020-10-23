@@ -331,4 +331,5 @@ let initFn = function(configFile, additionalConfig) {
 		.done();
 };
 exports.init = initFn;
+
 //# sourceMappingURL=launcher.js.map
