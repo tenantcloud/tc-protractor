@@ -21,12 +21,13 @@ class Clipboard {
 		return this.activeSpecs;
 	}
 
-	decreaseSpecsCount(countActiveTasks) {
+	decreaseSpecsCount() {
 		this.activeSpecs--;
 	}
 
 	setAllSpecs(count) {
 		this.allSpecs = count;
+		this.setActiveSpecs(count);
 	}
 
 	getAllSpecs() {

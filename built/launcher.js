@@ -292,7 +292,7 @@ let initFn = function(configFile, additionalConfig) {
 								logger.info(os.EOL);
 								deferred.resolve();
 							}
-							clipboard.decreaseSpecsCount(scheduler.countActiveTasks());
+							clipboard.decreaseSpecsCount();
 							// logger.info(scheduler.countActiveTasks() + ' instance(s) of WebDriver still running');
 						})
 						.catch(err => {

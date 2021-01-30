@@ -97,16 +97,12 @@ class TaskScheduler {
 			let rotatedIndex = (i + this.rotationIndex) % this.taskQueues.length;
 			let queue = this.taskQueues[rotatedIndex];
 			if (queue.numRunningInstances < queue.maxInstance && queue.specsIndex < queue.specLists.length) {
-				if (clipboard.getActiveSpecs() === null) {
-					clipboard.setActiveSpecs(queue.specLists.length);
-				}
-
 				this.rotationIndex = rotatedIndex + 1;
 				++queue.numRunningInstances;
 				let taskId = '' + rotatedIndex + 1;
-				if (queue.specLists.length > 1) {
+				// if (queue.specLists.length > 1) {
 					taskId += '-' + queue.specsIndex;
-				}
+				// }
 				let specs = queue.specLists[queue.specsIndex];
 				++queue.specsIndex;
 				return {
