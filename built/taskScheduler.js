@@ -151,9 +151,9 @@ class TaskScheduler {
 	 * @return {number}
 	 */
 	countActiveTasks() {
-		let count = 0;
+		let count = [];
 		this.taskQueues.forEach(queue => {
-			count += queue.numRunningInstances;
+			count.push(queue.numRunningInstances);
 		});
 		return count;
 	}

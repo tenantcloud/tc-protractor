@@ -58,8 +58,8 @@ class TaskResults {
 			shortName = capabilities.logName
 				? capabilities.logName
 				: capabilities.browserName
-				? capabilities.browserName
-				: '';
+					? capabilities.browserName
+					: '';
 			shortName += capabilities.version ? capabilities.version : '';
 			shortName += capabilities.logName && capabilities.count < 2 ? '' : ' #' + result.taskId;
 
@@ -96,10 +96,10 @@ class TaskResults {
 		if (specFailures && processFailures) {
 			logger.info(
 				'overall: ' +
-					specFailures +
-					' failed spec(s) and ' +
-					processFailures +
-					' process(es) failed to complete'
+				specFailures +
+				' failed spec(s) and ' +
+				processFailures +
+				' process(es) failed to complete'
 			);
 		} else if (specFailures) {
 			logger.info('overall: ' + specFailures + ' failed spec(s)');
@@ -168,8 +168,8 @@ let initFn = function(configFile, additionalConfig) {
 						if (config.multiCapabilities.length) {
 							logger.warn(
 								'You have specified both capabilities and ' +
-									'multiCapabilities. This will result in capabilities being ' +
-									'ignored'
+								'multiCapabilities. This will result in capabilities being ' +
+								'ignored'
 							);
 						} else {
 							// Use capabilities if multiCapabilities is empty.
@@ -292,7 +292,7 @@ let initFn = function(configFile, additionalConfig) {
 								logger.info(os.EOL);
 								deferred.resolve();
 							}
-							clipboard.decreaseSpecsCount();
+							clipboard.decreaseSpecsCount(scheduler.countActiveTasks());
 							// logger.info(scheduler.countActiveTasks() + ' instance(s) of WebDriver still running');
 						})
 						.catch(err => {
@@ -308,8 +308,30 @@ let initFn = function(configFile, additionalConfig) {
 			for (let i = 0; i < scheduler.maxConcurrentTasks(); ++i) {
 				createNextTaskRunner();
 			}
-			let instanceWord = scheduler.countActiveTasks() === 1 ? 'instance' : 'instances';
-			logger.info(`Running ${scheduler.countActiveTasks()} ${instanceWord}`);
+			let countActiveTasks = () => {
+				let countActiveTasks = 0;
+				for (let key of scheduler.countActiveTasks()) {
+					countActiveTasks += key;
+				}
+				return countActiveTasks;
+			};
+			let instanceWord = countActiveTasks() === 1 ? 'instance' : 'instances';
+
+			let countAllSpecs = () => {
+				if (scheduler.countActiveTasks().length === 2) {
+					let countActiveSpecs = '';
+					for (let key of scheduler.countActiveTasks()) {
+						if (key !== 0) {
+							countActiveSpecs += `${countActiveSpecs ? ' +' : ''} ${key}`;
+						}
+					}
+					return countActiveSpecs;
+				} else {
+					return countActiveTasks();
+				}
+			};
+
+			logger.info(`Running ${countAllSpecs()} ${instanceWord}`);
 			// By now all runners have completed.
 			deferred.promise
 				.then(function() {
