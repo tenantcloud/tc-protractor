@@ -22,7 +22,6 @@ var functions = {};
 ////                                               ////
 ///////////////////////////////////////////////////////
 
-
 /* Wraps a function up into a string with its helper functions so that it can
  * call those helper functions client side
  *
@@ -33,14 +32,14 @@ var functions = {};
  *   way that it has access to its helper functions
  */
 function wrapWithHelpers(fun) {
-  var helpers = Array.prototype.slice.call(arguments, 1);
-  if (!helpers.length) {
-    return fun;
-  }
-  var FunClass = Function; // Get the linter to allow this eval
-  return new FunClass(
-      helpers.join(';') + String.fromCharCode(59) +
-      '  return (' + fun.toString() + ').apply(this, arguments);');
+	var helpers = Array.prototype.slice.call(arguments, 1);
+	if (!helpers.length) {
+		return fun;
+	}
+	var FunClass = Function; // Get the linter to allow this eval
+	return new FunClass(
+		helpers.join(';') + String.fromCharCode(59) + '  return (' + fun.toString() + ').apply(this, arguments);'
+	);
 }
 
 /* Tests if an ngRepeat matches a repeater
@@ -53,12 +52,18 @@ function wrapWithHelpers(fun) {
  * @return {boolean} If the ngRepeat matched the repeater
  */
 function repeaterMatch(ngRepeat, repeater, exact) {
-  if (exact) {
-    return ngRepeat.split(' track by ')[0].split(' as ')[0].split('|')[0].
-        split('=')[0].trim() == repeater;
-  } else {
-    return ngRepeat.indexOf(repeater) != -1;
-  }
+	if (exact) {
+		return (
+			ngRepeat
+				.split(' track by ')[0]
+				.split(' as ')[0]
+				.split('|')[0]
+				.split('=')[0]
+				.trim() == repeater
+		);
+	} else {
+		return ngRepeat.indexOf(repeater) != -1;
+	}
 }
 
 /* Tries to find $$testability and possibly $injector for an ng1 app
@@ -73,45 +78,49 @@ function repeaterMatch(ngRepeat, repeater, exact) {
  *   ng1 app hooks it finds
  */
 function getNg1Hooks(selector, injectorPlease) {
-  function tryEl(el) {
-    try {
-      if (!injectorPlease && angular.getTestability) {
-        var $$testability = angular.getTestability(el);
-        if ($$testability) {
-          return {$$testability: $$testability};
-        }
-      } else {
-        var $injector = angular.element(el).injector();
-        if ($injector) {
-          return {$injector: $injector};
-        }
-      }
-    } catch(err) {}
-  }
-  function trySelector(selector) {
-    var els = document.querySelectorAll(selector);
-    for (var i = 0; i < els.length; i++) {
-      var elHooks = tryEl(els[i]);
-      if (elHooks) {
-        return elHooks;
-      }
-    }
-  }
+	function tryEl(el) {
+		try {
+			if (!injectorPlease && angular.getTestability) {
+				var $$testability = angular.getTestability(el);
+				if ($$testability) {
+					return { $$testability: $$testability };
+				}
+			} else {
+				var $injector = angular.element(el).injector();
+				if ($injector) {
+					return { $injector: $injector };
+				}
+			}
+		} catch (err) {}
+	}
+	function trySelector(selector) {
+		var els = document.querySelectorAll(selector);
+		for (var i = 0; i < els.length; i++) {
+			var elHooks = tryEl(els[i]);
+			if (elHooks) {
+				return elHooks;
+			}
+		}
+	}
 
-  if (selector) {
-    return trySelector(selector);
-  } else if (window.__TESTABILITY__NG1_APP_ROOT_INJECTOR__) {
-    var $injector = window.__TESTABILITY__NG1_APP_ROOT_INJECTOR__;
-    var $$testability = null;
-    try {
-      $$testability = $injector.get('$$testability');
-    } catch (e) {}
-    return {$injector: $injector, $$testability: $$testability};
-  } else {
-    return tryEl(document.body) ||
-        trySelector('[ng-app]') || trySelector('[ng\\:app]') ||
-        trySelector('[ng-controller]') || trySelector('[ng\\:controller]');
-  }
+	if (selector) {
+		return trySelector(selector);
+	} else if (window.__TESTABILITY__NG1_APP_ROOT_INJECTOR__) {
+		var $injector = window.__TESTABILITY__NG1_APP_ROOT_INJECTOR__;
+		var $$testability = null;
+		try {
+			$$testability = $injector.get('$$testability');
+		} catch (e) {}
+		return { $injector: $injector, $$testability: $$testability };
+	} else {
+		return (
+			tryEl(document.body) ||
+			trySelector('[ng-app]') ||
+			trySelector('[ng\\:app]') ||
+			trySelector('[ng-controller]') ||
+			trySelector('[ng\\:controller]')
+		);
+	}
 }
 
 ///////////////////////////////////////////////////////
@@ -119,7 +128,6 @@ function getNg1Hooks(selector, injectorPlease) {
 ////                    SCRIPTS                    ////
 ////                                               ////
 ///////////////////////////////////////////////////////
-
 
 /**
  * Wait until Angular has finished rendering and has
@@ -133,98 +141,100 @@ function getNg1Hooks(selector, injectorPlease) {
  *     be passed as a parameter.
  */
 functions.waitForAngular = function(rootSelector, callback) {
+	try {
+		// Wait for both angular1 testability and angular2 testability.
 
-  try {
-    // Wait for both angular1 testability and angular2 testability.
+		var testCallback = callback;
 
-    var testCallback = callback;
+		// Wait for angular1 testability first and run waitForAngular2 as a callback
+		var waitForAngular1 = function(callback) {
+			if (window.angular) {
+				var hooks = getNg1Hooks(rootSelector);
+				if (!hooks) {
+					callback(); // not an angular1 app
+				} else {
+					if (hooks.$$testability) {
+						hooks.$$testability.whenStable(callback);
+					} else if (hooks.$injector) {
+						hooks.$injector.get('$browser').notifyWhenNoOutstandingRequests(callback);
+					} else if (!rootSelector) {
+						throw new Error(
+							'Could not automatically find injector on page: "' +
+								window.location.toString() +
+								'".  Consider using config.rootEl'
+						);
+					} else {
+						throw new Error(
+							'root element (' +
+								rootSelector +
+								') has no injector.' +
+								' this may mean it is not inside ng-app.'
+						);
+					}
+				}
+			} else {
+				callback();
+			} // not an angular1 app
+		};
 
-    // Wait for angular1 testability first and run waitForAngular2 as a callback
-    var waitForAngular1 = function(callback) {
+		// Wait for Angular2 testability and then run test callback
+		var waitForAngular2 = function() {
+			if (window.getAngularTestability) {
+				if (rootSelector) {
+					var testability = null;
+					var el = document.querySelector(rootSelector);
+					try {
+						testability = window.getAngularTestability(el);
+					} catch (e) {}
+					if (testability) {
+						testability.whenStable(testCallback);
+						return;
+					}
+				}
 
-      if (window.angular) {
-        var hooks = getNg1Hooks(rootSelector);
-        if (!hooks){
-          callback();  // not an angular1 app
-        }
-        else{
-          if (hooks.$$testability) {
-            hooks.$$testability.whenStable(callback);
-          } else if (hooks.$injector) {
-            hooks.$injector.get('$browser')
-                .notifyWhenNoOutstandingRequests(callback);
-          } else if (!rootSelector) {
-            throw new Error(
-                'Could not automatically find injector on page: "' +
-                window.location.toString() + '".  Consider using config.rootEl');
-          } else {
-            throw new Error(
-                'root element (' + rootSelector + ') has no injector.' +
-                ' this may mean it is not inside ng-app.');
-          }
-        }
-      }
-      else {callback();}  // not an angular1 app
-    };
+				// Didn't specify root element or testability could not be found
+				// by rootSelector. This may happen in a hybrid app, which could have
+				// more than one root.
+				var testabilities = window.getAllAngularTestabilities();
+				var count = testabilities.length;
 
-    // Wait for Angular2 testability and then run test callback
-    var waitForAngular2 = function() {
-      if (window.getAngularTestability) {
-        if (rootSelector) {
-          var testability = null;
-          var el = document.querySelector(rootSelector);
-          try{
-            testability = window.getAngularTestability(el);
-          }
-          catch(e){}
-          if (testability) {
-            testability.whenStable(testCallback);
-            return;
-          }
-        }
+				// No angular2 testability, this happens when
+				// going to a hybrid page and going back to a pure angular1 page
+				if (count === 0) {
+					testCallback();
+					return;
+				}
 
-        // Didn't specify root element or testability could not be found
-        // by rootSelector. This may happen in a hybrid app, which could have
-        // more than one root.
-        var testabilities = window.getAllAngularTestabilities();
-        var count = testabilities.length;
+				var decrement = function() {
+					count--;
+					if (count === 0) {
+						testCallback();
+					}
+				};
+				testabilities.forEach(function(testability) {
+					testability.whenStable(decrement);
+				});
+			} else {
+				testCallback();
+			} // not an angular2 app
+		};
 
-        // No angular2 testability, this happens when
-        // going to a hybrid page and going back to a pure angular1 page
-        if (count === 0) {
-          testCallback();
-          return;
-        }
-
-        var decrement = function() {
-          count--;
-          if (count === 0) {
-            testCallback();
-          }
-        };
-        testabilities.forEach(function(testability) {
-          testability.whenStable(decrement);
-        });
-
-      }
-      else {testCallback();}  // not an angular2 app
-    };
-
-    if (!(window.angular) && !(window.getAngularTestability)) {
-      // no testability hook
-      throw new Error(
-          'both angularJS testability and angular testability are undefined.' +
-          '  This could be either ' +
-          'because this is a non-angular page or because your test involves ' +
-          'client-side navigation, which can interfere with Protractor\'s ' +
-          'bootstrapping.  See http://git.io/v4gXM for details');
-    } else {waitForAngular1(waitForAngular2);}  // Wait for angular1 and angular2
-                                                // Testability hooks sequentially
-
-  } catch (err) {
-    callback(err.message);
-  }
-
+		if (!window.angular && !window.getAngularTestability) {
+			// no testability hook
+			throw new Error(
+				'both angularJS testability and angular testability are undefined.' +
+					'  This could be either ' +
+					'because this is a non-angular page or because your test involves ' +
+					"client-side navigation, which can interfere with Protractor's " +
+					'bootstrapping.  See http://git.io/v4gXM for details'
+			);
+		} else {
+			waitForAngular1(waitForAngular2);
+		} // Wait for angular1 and angular2
+		// Testability hooks sequentially
+	} catch (err) {
+		callback(err.message);
+	}
 };
 
 /**
@@ -238,34 +248,34 @@ functions.waitForAngular = function(rootSelector, callback) {
  * @return {Array.<Element>} The elements containing the binding.
  */
 functions.findBindings = function(binding, exactMatch, using, rootSelector) {
-  using = using || document;
-  if (angular.getTestability) {
-    return getNg1Hooks(rootSelector).$$testability.
-        findBindings(using, binding, exactMatch);
-  }
-  var bindings = using.getElementsByClassName('ng-binding');
-  var matches = [];
-  for (var i = 0; i < bindings.length; ++i) {
-    var dataBinding = angular.element(bindings[i]).data('$binding');
-    if (dataBinding) {
-      var bindingName = dataBinding.exp || dataBinding[0].exp || dataBinding;
-      if (exactMatch) {
-        var matcher = new RegExp('({|\\s|^|\\|)' +
-            /* See http://stackoverflow.com/q/3561711 */
-            binding.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, '\\$&') +
-            '(}|\\s|$|\\|)');
-        if (matcher.test(bindingName)) {
-          matches.push(bindings[i]);
-        }
-      } else {
-        if (bindingName.indexOf(binding) != -1) {
-          matches.push(bindings[i]);
-        }
-      }
-
-    }
-  }
-  return matches; /* Return the whole array for webdriver.findElements. */
+	using = using || document;
+	if (angular.getTestability) {
+		return getNg1Hooks(rootSelector).$$testability.findBindings(using, binding, exactMatch);
+	}
+	var bindings = using.getElementsByClassName('ng-binding');
+	var matches = [];
+	for (var i = 0; i < bindings.length; ++i) {
+		var dataBinding = angular.element(bindings[i]).data('$binding');
+		if (dataBinding) {
+			var bindingName = dataBinding.exp || dataBinding[0].exp || dataBinding;
+			if (exactMatch) {
+				var matcher = new RegExp(
+					'({|\\s|^|\\|)' +
+						/* See http://stackoverflow.com/q/3561711 */
+						binding.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, '\\$&') +
+						'(}|\\s|$|\\|)'
+				);
+				if (matcher.test(bindingName)) {
+					matches.push(bindings[i]);
+				}
+			} else {
+				if (bindingName.indexOf(binding) != -1) {
+					matches.push(bindings[i]);
+				}
+			}
+		}
+	}
+	return matches; /* Return the whole array for webdriver.findElements. */
 };
 
 /**
@@ -282,48 +292,48 @@ functions.findBindings = function(binding, exactMatch, using, rootSelector) {
  *     in the first row in the case of ng-repeat-start.
  */
 function findRepeaterRows(repeater, exact, index, using) {
-  using = using || document;
+	using = using || document;
 
-  var prefixes = ['ng-', 'ng_', 'data-ng-', 'x-ng-', 'ng\\:'];
-  var rows = [];
-  for (var p = 0; p < prefixes.length; ++p) {
-    var attr = prefixes[p] + 'repeat';
-    var repeatElems = using.querySelectorAll('[' + attr + ']');
-    attr = attr.replace(/\\/g, '');
-    for (var i = 0; i < repeatElems.length; ++i) {
-      if (repeaterMatch(repeatElems[i].getAttribute(attr), repeater, exact)) {
-        rows.push(repeatElems[i]);
-      }
-    }
-  }
-  /* multiRows is an array of arrays, where each inner array contains
+	var prefixes = ['ng-', 'ng_', 'data-ng-', 'x-ng-', 'ng\\:'];
+	var rows = [];
+	for (var p = 0; p < prefixes.length; ++p) {
+		var attr = prefixes[p] + 'repeat';
+		var repeatElems = using.querySelectorAll('[' + attr + ']');
+		attr = attr.replace(/\\/g, '');
+		for (var i = 0; i < repeatElems.length; ++i) {
+			if (repeaterMatch(repeatElems[i].getAttribute(attr), repeater, exact)) {
+				rows.push(repeatElems[i]);
+			}
+		}
+	}
+	/* multiRows is an array of arrays, where each inner array contains
      one row of elements. */
-  var multiRows = [];
-  for (var p = 0; p < prefixes.length; ++p) {
-    var attr = prefixes[p] + 'repeat-start';
-    var repeatElems = using.querySelectorAll('[' + attr + ']');
-    attr = attr.replace(/\\/g, '');
-    for (var i = 0; i < repeatElems.length; ++i) {
-      if (repeaterMatch(repeatElems[i].getAttribute(attr), repeater, exact)) {
-        var elem = repeatElems[i];
-        var row = [];
-        while (elem.nodeType != 8 ||
-            !repeaterMatch(elem.nodeValue, repeater)) {
-          if (elem.nodeType == 1) {
-            row.push(elem);
-          }
-          elem = elem.nextSibling;
-        }
-        multiRows.push(row);
-      }
-    }
-  }
-  var row = rows[index] || [], multiRow = multiRows[index] || [];
-  return [].concat(row, multiRow);
+	var multiRows = [];
+	for (var p = 0; p < prefixes.length; ++p) {
+		var attr = prefixes[p] + 'repeat-start';
+		var repeatElems = using.querySelectorAll('[' + attr + ']');
+		attr = attr.replace(/\\/g, '');
+		for (var i = 0; i < repeatElems.length; ++i) {
+			if (repeaterMatch(repeatElems[i].getAttribute(attr), repeater, exact)) {
+				var elem = repeatElems[i];
+				var row = [];
+				while (elem.nodeType != 8 || !repeaterMatch(elem.nodeValue, repeater)) {
+					if (elem.nodeType == 1) {
+						row.push(elem);
+					}
+					elem = elem.nextSibling;
+				}
+				multiRows.push(row);
+			}
+		}
+	}
+	var row = rows[index] || [],
+		multiRow = multiRows[index] || [];
+	return [].concat(row, multiRow);
 }
 functions.findRepeaterRows = wrapWithHelpers(findRepeaterRows, repeaterMatch);
 
- /**
+/**
  * Find all rows of an ng-repeat.
  *
  * @param {string} repeater The text of the repeater, e.g. 'cat in cats'.
@@ -333,38 +343,37 @@ functions.findRepeaterRows = wrapWithHelpers(findRepeaterRows, repeaterMatch);
  * @return {Array.<Element>} All rows of the repeater.
  */
 function findAllRepeaterRows(repeater, exact, using) {
-  using = using || document;
+	using = using || document;
 
-  var rows = [];
-  var prefixes = ['ng-', 'ng_', 'data-ng-', 'x-ng-', 'ng\\:'];
-  for (var p = 0; p < prefixes.length; ++p) {
-    var attr = prefixes[p] + 'repeat';
-    var repeatElems = using.querySelectorAll('[' + attr + ']');
-    attr = attr.replace(/\\/g, '');
-    for (var i = 0; i < repeatElems.length; ++i) {
-      if (repeaterMatch(repeatElems[i].getAttribute(attr), repeater, exact)) {
-        rows.push(repeatElems[i]);
-      }
-    }
-  }
-  for (var p = 0; p < prefixes.length; ++p) {
-    var attr = prefixes[p] + 'repeat-start';
-    var repeatElems = using.querySelectorAll('[' + attr + ']');
-    attr = attr.replace(/\\/g, '');
-    for (var i = 0; i < repeatElems.length; ++i) {
-      if (repeaterMatch(repeatElems[i].getAttribute(attr), repeater, exact)) {
-        var elem = repeatElems[i];
-        while (elem.nodeType != 8 ||
-            !repeaterMatch(elem.nodeValue, repeater)) {
-          if (elem.nodeType == 1) {
-            rows.push(elem);
-          }
-          elem = elem.nextSibling;
-        }
-      }
-    }
-  }
-  return rows;
+	var rows = [];
+	var prefixes = ['ng-', 'ng_', 'data-ng-', 'x-ng-', 'ng\\:'];
+	for (var p = 0; p < prefixes.length; ++p) {
+		var attr = prefixes[p] + 'repeat';
+		var repeatElems = using.querySelectorAll('[' + attr + ']');
+		attr = attr.replace(/\\/g, '');
+		for (var i = 0; i < repeatElems.length; ++i) {
+			if (repeaterMatch(repeatElems[i].getAttribute(attr), repeater, exact)) {
+				rows.push(repeatElems[i]);
+			}
+		}
+	}
+	for (var p = 0; p < prefixes.length; ++p) {
+		var attr = prefixes[p] + 'repeat-start';
+		var repeatElems = using.querySelectorAll('[' + attr + ']');
+		attr = attr.replace(/\\/g, '');
+		for (var i = 0; i < repeatElems.length; ++i) {
+			if (repeaterMatch(repeatElems[i].getAttribute(attr), repeater, exact)) {
+				var elem = repeatElems[i];
+				while (elem.nodeType != 8 || !repeaterMatch(elem.nodeValue, repeater)) {
+					if (elem.nodeType == 1) {
+						rows.push(elem);
+					}
+					elem = elem.nextSibling;
+				}
+			}
+		}
+	}
+	return rows;
 }
 functions.findAllRepeaterRows = wrapWithHelpers(findAllRepeaterRows, repeaterMatch);
 
@@ -381,93 +390,86 @@ functions.findAllRepeaterRows = wrapWithHelpers(findAllRepeaterRows, repeaterMat
  * @return {Array.<Element>} The element in an array.
  */
 function findRepeaterElement(repeater, exact, index, binding, using, rootSelector) {
-  var matches = [];
-  using = using || document;
+	var matches = [];
+	using = using || document;
 
-  var rows = [];
-  var prefixes = ['ng-', 'ng_', 'data-ng-', 'x-ng-', 'ng\\:'];
-  for (var p = 0; p < prefixes.length; ++p) {
-    var attr = prefixes[p] + 'repeat';
-    var repeatElems = using.querySelectorAll('[' + attr + ']');
-    attr = attr.replace(/\\/g, '');
-    for (var i = 0; i < repeatElems.length; ++i) {
-      if (repeaterMatch(repeatElems[i].getAttribute(attr), repeater, exact)) {
-        rows.push(repeatElems[i]);
-      }
-    }
-  }
-  /* multiRows is an array of arrays, where each inner array contains
+	var rows = [];
+	var prefixes = ['ng-', 'ng_', 'data-ng-', 'x-ng-', 'ng\\:'];
+	for (var p = 0; p < prefixes.length; ++p) {
+		var attr = prefixes[p] + 'repeat';
+		var repeatElems = using.querySelectorAll('[' + attr + ']');
+		attr = attr.replace(/\\/g, '');
+		for (var i = 0; i < repeatElems.length; ++i) {
+			if (repeaterMatch(repeatElems[i].getAttribute(attr), repeater, exact)) {
+				rows.push(repeatElems[i]);
+			}
+		}
+	}
+	/* multiRows is an array of arrays, where each inner array contains
      one row of elements. */
-  var multiRows = [];
-  for (var p = 0; p < prefixes.length; ++p) {
-    var attr = prefixes[p] + 'repeat-start';
-    var repeatElems = using.querySelectorAll('[' + attr + ']');
-    attr = attr.replace(/\\/g, '');
-    for (var i = 0; i < repeatElems.length; ++i) {
-      if (repeaterMatch(repeatElems[i].getAttribute(attr), repeater, exact)) {
-        var elem = repeatElems[i];
-        var row = [];
-        while (elem.nodeType != 8 || (elem.nodeValue &&
-            !repeaterMatch(elem.nodeValue, repeater))) {
-          if (elem.nodeType == 1) {
-            row.push(elem);
-          }
-          elem = elem.nextSibling;
-        }
-        multiRows.push(row);
-      }
-    }
-  }
-  var row = rows[index];
-  var multiRow = multiRows[index];
-  var bindings = [];
-  if (row) {
-    if (angular.getTestability) {
-      matches.push.apply(
-          matches,
-          getNg1Hooks(rootSelector).$$testability.findBindings(row, binding));
-    } else {
-      if (row.className.indexOf('ng-binding') != -1) {
-        bindings.push(row);
-      }
-      var childBindings = row.getElementsByClassName('ng-binding');
-      for (var i = 0; i < childBindings.length; ++i) {
-        bindings.push(childBindings[i]);
-      }
-    }
-  }
-  if (multiRow) {
-    for (var i = 0; i < multiRow.length; ++i) {
-      var rowElem = multiRow[i];
-      if (angular.getTestability) {
-        matches.push.apply(
-            matches,
-            getNg1Hooks(rootSelector).$$testability.findBindings(rowElem,
-                binding));
-      } else {
-        if (rowElem.className.indexOf('ng-binding') != -1) {
-          bindings.push(rowElem);
-        }
-        var childBindings = rowElem.getElementsByClassName('ng-binding');
-        for (var j = 0; j < childBindings.length; ++j) {
-          bindings.push(childBindings[j]);
-        }
-      }
-    }
-  }
-  for (var i = 0; i < bindings.length; ++i) {
-    var dataBinding = angular.element(bindings[i]).data('$binding');
-    if (dataBinding) {
-      var bindingName = dataBinding.exp || dataBinding[0].exp || dataBinding;
-      if (bindingName.indexOf(binding) != -1) {
-        matches.push(bindings[i]);
-      }
-    }
-  }
-  return matches;
+	var multiRows = [];
+	for (var p = 0; p < prefixes.length; ++p) {
+		var attr = prefixes[p] + 'repeat-start';
+		var repeatElems = using.querySelectorAll('[' + attr + ']');
+		attr = attr.replace(/\\/g, '');
+		for (var i = 0; i < repeatElems.length; ++i) {
+			if (repeaterMatch(repeatElems[i].getAttribute(attr), repeater, exact)) {
+				var elem = repeatElems[i];
+				var row = [];
+				while (elem.nodeType != 8 || (elem.nodeValue && !repeaterMatch(elem.nodeValue, repeater))) {
+					if (elem.nodeType == 1) {
+						row.push(elem);
+					}
+					elem = elem.nextSibling;
+				}
+				multiRows.push(row);
+			}
+		}
+	}
+	var row = rows[index];
+	var multiRow = multiRows[index];
+	var bindings = [];
+	if (row) {
+		if (angular.getTestability) {
+			matches.push.apply(matches, getNg1Hooks(rootSelector).$$testability.findBindings(row, binding));
+		} else {
+			if (row.className.indexOf('ng-binding') != -1) {
+				bindings.push(row);
+			}
+			var childBindings = row.getElementsByClassName('ng-binding');
+			for (var i = 0; i < childBindings.length; ++i) {
+				bindings.push(childBindings[i]);
+			}
+		}
+	}
+	if (multiRow) {
+		for (var i = 0; i < multiRow.length; ++i) {
+			var rowElem = multiRow[i];
+			if (angular.getTestability) {
+				matches.push.apply(matches, getNg1Hooks(rootSelector).$$testability.findBindings(rowElem, binding));
+			} else {
+				if (rowElem.className.indexOf('ng-binding') != -1) {
+					bindings.push(rowElem);
+				}
+				var childBindings = rowElem.getElementsByClassName('ng-binding');
+				for (var j = 0; j < childBindings.length; ++j) {
+					bindings.push(childBindings[j]);
+				}
+			}
+		}
+	}
+	for (var i = 0; i < bindings.length; ++i) {
+		var dataBinding = angular.element(bindings[i]).data('$binding');
+		if (dataBinding) {
+			var bindingName = dataBinding.exp || dataBinding[0].exp || dataBinding;
+			if (bindingName.indexOf(binding) != -1) {
+				matches.push(bindings[i]);
+			}
+		}
+	}
+	return matches;
 }
-functions.findRepeaterElement =
-    wrapWithHelpers(findRepeaterElement, repeaterMatch, getNg1Hooks);
+functions.findRepeaterElement = wrapWithHelpers(findRepeaterElement, repeaterMatch, getNg1Hooks);
 
 /**
  * Find the elements in a column of an ng-repeat.
@@ -481,92 +483,87 @@ functions.findRepeaterElement =
  * @return {Array.<Element>} The elements in the column.
  */
 function findRepeaterColumn(repeater, exact, binding, using, rootSelector) {
-  var matches = [];
-  using = using || document;
+	var matches = [];
+	using = using || document;
 
-  var rows = [];
-  var prefixes = ['ng-', 'ng_', 'data-ng-', 'x-ng-', 'ng\\:'];
-  for (var p = 0; p < prefixes.length; ++p) {
-    var attr = prefixes[p] + 'repeat';
-    var repeatElems = using.querySelectorAll('[' + attr + ']');
-    attr = attr.replace(/\\/g, '');
-    for (var i = 0; i < repeatElems.length; ++i) {
-      if (repeaterMatch(repeatElems[i].getAttribute(attr), repeater, exact)) {
-        rows.push(repeatElems[i]);
-      }
-    }
-  }
-  /* multiRows is an array of arrays, where each inner array contains
+	var rows = [];
+	var prefixes = ['ng-', 'ng_', 'data-ng-', 'x-ng-', 'ng\\:'];
+	for (var p = 0; p < prefixes.length; ++p) {
+		var attr = prefixes[p] + 'repeat';
+		var repeatElems = using.querySelectorAll('[' + attr + ']');
+		attr = attr.replace(/\\/g, '');
+		for (var i = 0; i < repeatElems.length; ++i) {
+			if (repeaterMatch(repeatElems[i].getAttribute(attr), repeater, exact)) {
+				rows.push(repeatElems[i]);
+			}
+		}
+	}
+	/* multiRows is an array of arrays, where each inner array contains
      one row of elements. */
-  var multiRows = [];
-  for (var p = 0; p < prefixes.length; ++p) {
-    var attr = prefixes[p] + 'repeat-start';
-    var repeatElems = using.querySelectorAll('[' + attr + ']');
-    attr = attr.replace(/\\/g, '');
-    for (var i = 0; i < repeatElems.length; ++i) {
-      if (repeaterMatch(repeatElems[i].getAttribute(attr), repeater, exact)) {
-        var elem = repeatElems[i];
-        var row = [];
-        while (elem.nodeType != 8 || (elem.nodeValue &&
-            !repeaterMatch(elem.nodeValue, repeater))) {
-          if (elem.nodeType == 1) {
-            row.push(elem);
-          }
-          elem = elem.nextSibling;
-        }
-        multiRows.push(row);
-      }
-    }
-  }
-  var bindings = [];
-  for (var i = 0; i < rows.length; ++i) {
-    if (angular.getTestability) {
-      matches.push.apply(
-          matches,
-          getNg1Hooks(rootSelector).$$testability.findBindings(rows[i],
-              binding));
-    } else {
-      if (rows[i].className.indexOf('ng-binding') != -1) {
-        bindings.push(rows[i]);
-      }
-      var childBindings = rows[i].getElementsByClassName('ng-binding');
-      for (var k = 0; k < childBindings.length; ++k) {
-        bindings.push(childBindings[k]);
-      }
-    }
-  }
-  for (var i = 0; i < multiRows.length; ++i) {
-    for (var j = 0; j < multiRows[i].length; ++j) {
-      if (angular.getTestability) {
-        matches.push.apply(
-            matches,
-            getNg1Hooks(rootSelector).$$testability.findBindings(
-                multiRows[i][j], binding));
-      } else {
-        var elem = multiRows[i][j];
-        if (elem.className.indexOf('ng-binding') != -1) {
-          bindings.push(elem);
-        }
-        var childBindings = elem.getElementsByClassName('ng-binding');
-        for (var k = 0; k < childBindings.length; ++k) {
-          bindings.push(childBindings[k]);
-        }
-      }
-    }
-  }
-  for (var j = 0; j < bindings.length; ++j) {
-    var dataBinding = angular.element(bindings[j]).data('$binding');
-    if (dataBinding) {
-      var bindingName = dataBinding.exp || dataBinding[0].exp || dataBinding;
-      if (bindingName.indexOf(binding) != -1) {
-        matches.push(bindings[j]);
-      }
-    }
-  }
-  return matches;
+	var multiRows = [];
+	for (var p = 0; p < prefixes.length; ++p) {
+		var attr = prefixes[p] + 'repeat-start';
+		var repeatElems = using.querySelectorAll('[' + attr + ']');
+		attr = attr.replace(/\\/g, '');
+		for (var i = 0; i < repeatElems.length; ++i) {
+			if (repeaterMatch(repeatElems[i].getAttribute(attr), repeater, exact)) {
+				var elem = repeatElems[i];
+				var row = [];
+				while (elem.nodeType != 8 || (elem.nodeValue && !repeaterMatch(elem.nodeValue, repeater))) {
+					if (elem.nodeType == 1) {
+						row.push(elem);
+					}
+					elem = elem.nextSibling;
+				}
+				multiRows.push(row);
+			}
+		}
+	}
+	var bindings = [];
+	for (var i = 0; i < rows.length; ++i) {
+		if (angular.getTestability) {
+			matches.push.apply(matches, getNg1Hooks(rootSelector).$$testability.findBindings(rows[i], binding));
+		} else {
+			if (rows[i].className.indexOf('ng-binding') != -1) {
+				bindings.push(rows[i]);
+			}
+			var childBindings = rows[i].getElementsByClassName('ng-binding');
+			for (var k = 0; k < childBindings.length; ++k) {
+				bindings.push(childBindings[k]);
+			}
+		}
+	}
+	for (var i = 0; i < multiRows.length; ++i) {
+		for (var j = 0; j < multiRows[i].length; ++j) {
+			if (angular.getTestability) {
+				matches.push.apply(
+					matches,
+					getNg1Hooks(rootSelector).$$testability.findBindings(multiRows[i][j], binding)
+				);
+			} else {
+				var elem = multiRows[i][j];
+				if (elem.className.indexOf('ng-binding') != -1) {
+					bindings.push(elem);
+				}
+				var childBindings = elem.getElementsByClassName('ng-binding');
+				for (var k = 0; k < childBindings.length; ++k) {
+					bindings.push(childBindings[k]);
+				}
+			}
+		}
+	}
+	for (var j = 0; j < bindings.length; ++j) {
+		var dataBinding = angular.element(bindings[j]).data('$binding');
+		if (dataBinding) {
+			var bindingName = dataBinding.exp || dataBinding[0].exp || dataBinding;
+			if (bindingName.indexOf(binding) != -1) {
+				matches.push(bindings[j]);
+			}
+		}
+	}
+	return matches;
 }
-functions.findRepeaterColumn =
-    wrapWithHelpers(findRepeaterColumn, repeaterMatch, getNg1Hooks);
+functions.findRepeaterColumn = wrapWithHelpers(findRepeaterColumn, repeaterMatch, getNg1Hooks);
 
 /**
  * Find elements by model name.
@@ -578,20 +575,19 @@ functions.findRepeaterColumn =
  * @return {Array.<Element>} The matching elements.
  */
 functions.findByModel = function(model, using, rootSelector) {
-  using = using || document;
+	using = using || document;
 
-  if (angular.getTestability) {
-    return getNg1Hooks(rootSelector).$$testability.
-        findModels(using, model, true);
-  }
-  var prefixes = ['ng-', 'ng_', 'data-ng-', 'x-ng-', 'ng\\:'];
-  for (var p = 0; p < prefixes.length; ++p) {
-    var selector = '[' + prefixes[p] + 'model="' + model + '"]';
-    var elements = using.querySelectorAll(selector);
-    if (elements.length) {
-      return elements;
-    }
-  }
+	if (angular.getTestability) {
+		return getNg1Hooks(rootSelector).$$testability.findModels(using, model, true);
+	}
+	var prefixes = ['ng-', 'ng_', 'data-ng-', 'x-ng-', 'ng\\:'];
+	for (var p = 0; p < prefixes.length; ++p) {
+		var selector = '[' + prefixes[p] + 'model="' + model + '"]';
+		var elements = using.querySelectorAll(selector);
+		if (elements.length) {
+			return elements;
+		}
+	}
 };
 
 /**
@@ -604,16 +600,16 @@ functions.findByModel = function(model, using, rootSelector) {
  * @return {Array.<Element>} The matching elements.
  */
 functions.findByOptions = function(optionsDescriptor, using) {
-  using = using || document;
+	using = using || document;
 
-  var prefixes = ['ng-', 'ng_', 'data-ng-', 'x-ng-', 'ng\\:'];
-  for (var p = 0; p < prefixes.length; ++p) {
-    var selector = '[' + prefixes[p] + 'options="' + optionsDescriptor + '"] option';
-    var elements = using.querySelectorAll(selector);
-    if (elements.length) {
-      return elements;
-    }
-  }
+	var prefixes = ['ng-', 'ng_', 'data-ng-', 'x-ng-', 'ng\\:'];
+	for (var p = 0; p < prefixes.length; ++p) {
+		var selector = '[' + prefixes[p] + 'options="' + optionsDescriptor + '"] option';
+		var elements = using.querySelectorAll(selector);
+		if (elements.length) {
+			return elements;
+		}
+	}
 };
 
 /**
@@ -625,24 +621,24 @@ functions.findByOptions = function(optionsDescriptor, using) {
  * @return {Array.<Element>} The matching elements.
  */
 functions.findByButtonText = function(searchText, using) {
-  using = using || document;
+	using = using || document;
 
-  var elements = using.querySelectorAll('button, input[type="button"], input[type="submit"]');
-  var matches = [];
-  for (var i = 0; i < elements.length; ++i) {
-    var element = elements[i];
-    var elementText;
-    if (element.tagName.toLowerCase() == 'button') {
-      elementText = element.textContent || element.innerText || '';
-    } else {
-      elementText = element.value;
-    }
-    if (elementText.trim() === searchText) {
-      matches.push(element);
-    }
-  }
+	var elements = using.querySelectorAll('button, input[type="button"], input[type="submit"]');
+	var matches = [];
+	for (var i = 0; i < elements.length; ++i) {
+		var element = elements[i];
+		var elementText;
+		if (element.tagName.toLowerCase() == 'button') {
+			elementText = element.textContent || element.innerText || '';
+		} else {
+			elementText = element.value;
+		}
+		if (elementText.trim() === searchText) {
+			matches.push(element);
+		}
+	}
 
-  return matches;
+	return matches;
 };
 
 /**
@@ -654,24 +650,24 @@ functions.findByButtonText = function(searchText, using) {
  * @return {Array.<Element>} The matching elements.
  */
 functions.findByPartialButtonText = function(searchText, using) {
-  using = using || document;
+	using = using || document;
 
-  var elements = using.querySelectorAll('button, input[type="button"], input[type="submit"]');
-  var matches = [];
-  for (var i = 0; i < elements.length; ++i) {
-    var element = elements[i];
-    var elementText;
-    if (element.tagName.toLowerCase() == 'button') {
-      elementText = element.textContent || element.innerText || '';
-    } else {
-      elementText = element.value;
-    }
-    if (elementText.indexOf(searchText) > -1) {
-      matches.push(element);
-    }
-  }
+	var elements = using.querySelectorAll('button, input[type="button"], input[type="submit"]');
+	var matches = [];
+	for (var i = 0; i < elements.length; ++i) {
+		var element = elements[i];
+		var elementText;
+		if (element.tagName.toLowerCase() == 'button') {
+			elementText = element.textContent || element.innerText || '';
+		} else {
+			elementText = element.value;
+		}
+		if (elementText.indexOf(searchText) > -1) {
+			matches.push(element);
+		}
+	}
 
-  return matches;
+	return matches;
 };
 
 /**
@@ -684,26 +680,25 @@ functions.findByPartialButtonText = function(searchText, using) {
  * @return {Array.<Element>} An array of matching elements.
  */
 functions.findByCssContainingText = function(cssSelector, searchText, using) {
-  using = using || document;
+	using = using || document;
 
-  if (searchText.indexOf('__REGEXP__') === 0) {
-    var match = searchText.split('__REGEXP__')[1].match(/\/(.*)\/(.*)?/);
-    searchText = new RegExp(match[1], match[2] || '');
-  }
-  var elements = using.querySelectorAll(cssSelector);
-  var matches = [];
-  for (var i = 0; i < elements.length; ++i) {
-    var element = elements[i];
-    var elementText = element.textContent || element.innerText || '';
-    var elementMatches = searchText instanceof RegExp ?
-        searchText.test(elementText) :
-        elementText.indexOf(searchText) > -1;
+	if (searchText.indexOf('__REGEXP__') === 0) {
+		var match = searchText.split('__REGEXP__')[1].match(/\/(.*)\/(.*)?/);
+		searchText = new RegExp(match[1], match[2] || '');
+	}
+	var elements = using.querySelectorAll(cssSelector);
+	var matches = [];
+	for (var i = 0; i < elements.length; ++i) {
+		var element = elements[i];
+		var elementText = element.textContent || element.innerText || '';
+		var elementMatches =
+			searchText instanceof RegExp ? searchText.test(elementText) : elementText.indexOf(searchText) > -1;
 
-    if (elementMatches) {
-      matches.push(element);
-    }
-  }
-  return matches;
+		if (elementMatches) {
+			matches.push(element);
+		}
+	}
+	return matches;
 };
 
 /**
@@ -718,52 +713,57 @@ functions.findByCssContainingText = function(cssSelector, searchText, using) {
  *
  */
 functions.testForAngular = function(attempts, ng12Hybrid, asyncCallback) {
-  var callback = function(args) {
-    setTimeout(function() {
-      asyncCallback(args);
-    }, 0);
-  };
-  var definitelyNg1 = !!ng12Hybrid;
-  var definitelyNg2OrNewer = false;
-  var check = function(n) {
-    try {
-      /* Figure out which version of angular we're waiting on */
-      if (!definitelyNg1 && !definitelyNg2OrNewer) {
-        if (window.angular && !(window.angular.version && window.angular.version.major > 1)) {
-          definitelyNg1 = true;
-        } else if (window.getAllAngularTestabilities) {
-          definitelyNg2OrNewer = true;
-        }
-      }
-      /* See if our version of angular is ready */
-      if (definitelyNg1) {
-        if (window.angular && window.angular.resumeBootstrap) {
-          return callback({ver: 1});
-        }
-      } else if (definitelyNg2OrNewer) {
-        if (true /* ng2 has no resumeBootstrap() */) {
-          return callback({ver: 2});
-        }
-      }
-      /* Try again (or fail) */
-      if (n < 1) {
-        if (definitelyNg1 && window.angular) {
-          callback({message: 'angular never provided resumeBootstrap'});
-        } else if (ng12Hybrid && !window.angular) {
-          callback({message: 'angular 1 never loaded' +
-              window.getAllAngularTestabilities ? ' (are you sure this app ' +
-              'uses ngUpgrade?  Try un-setting ng12Hybrid)' : ''});
-        } else {
-          callback({message: 'retries looking for angular exceeded'});
-        }
-      } else {
-        window.setTimeout(function() {check(n - 1);}, 1000);
-      }
-    } catch (e) {
-      callback({message: e});
-    }
-  };
-  check(attempts);
+	var callback = function(args) {
+		setTimeout(function() {
+			asyncCallback(args);
+		}, 0);
+	};
+	var definitelyNg1 = !!ng12Hybrid;
+	var definitelyNg2OrNewer = false;
+	var check = function(n) {
+		try {
+			/* Figure out which version of angular we're waiting on */
+			if (!definitelyNg1 && !definitelyNg2OrNewer) {
+				if (window.angular && !(window.angular.version && window.angular.version.major > 1)) {
+					definitelyNg1 = true;
+				} else if (window.getAllAngularTestabilities) {
+					definitelyNg2OrNewer = true;
+				}
+			}
+			/* See if our version of angular is ready */
+			if (definitelyNg1) {
+				if (window.angular && window.angular.resumeBootstrap) {
+					return callback({ ver: 1 });
+				}
+			} else if (definitelyNg2OrNewer) {
+				if (true /* ng2 has no resumeBootstrap() */) {
+					return callback({ ver: 2 });
+				}
+			}
+			/* Try again (or fail) */
+			if (n < 1) {
+				if (definitelyNg1 && window.angular) {
+					callback({ message: 'angular never provided resumeBootstrap' });
+				} else if (ng12Hybrid && !window.angular) {
+					callback({
+						message:
+							'angular 1 never loaded' + window.getAllAngularTestabilities
+								? ' (are you sure this app ' + 'uses ngUpgrade?  Try un-setting ng12Hybrid)'
+								: '',
+					});
+				} else {
+					callback({ message: 'retries looking for angular exceeded' });
+				}
+			} else {
+				window.setTimeout(function() {
+					check(n - 1);
+				}, 1000);
+			}
+		} catch (e) {
+			callback({ message: e });
+		}
+	};
+	check(attempts);
 };
 
 /**
@@ -775,19 +775,22 @@ functions.testForAngular = function(attempts, ng12Hybrid, asyncCallback) {
  * @return {?Object} The result of the evaluation.
  */
 functions.evaluate = function(element, expression) {
-  return angular.element(element).scope().$eval(expression);
+	return angular
+		.element(element)
+		.scope()
+		.$eval(expression);
 };
 
 functions.allowAnimations = function(element, value) {
-  var ngElement = angular.element(element);
-  if (ngElement.allowAnimations) {
-    // AngularDart: $testability API.
-    return ngElement.allowAnimations(value);
-  } else {
-    // AngularJS
-    var enabledFn = ngElement.injector().get('$animate').enabled;
-    return (value == null) ? enabledFn() : enabledFn(value);
-  }
+	var ngElement = angular.element(element);
+	if (ngElement.allowAnimations) {
+		// AngularDart: $testability API.
+		return ngElement.allowAnimations(value);
+	} else {
+		// AngularJS
+		var enabledFn = ngElement.injector().get('$animate').enabled;
+		return value == null ? enabledFn() : enabledFn(value);
+	}
 };
 
 /**
@@ -796,11 +799,11 @@ functions.allowAnimations = function(element, value) {
  * @param {string} selector The selector housing an ng-app
  */
 functions.getLocationAbsUrl = function(selector) {
-  var hooks = getNg1Hooks(selector);
-  if (angular.getTestability) {
-    return hooks.$$testability.getLocation();
-  }
-  return hooks.$injector.get('$location').absUrl();
+	var hooks = getNg1Hooks(selector);
+	if (angular.getTestability) {
+		return hooks.$$testability.getLocation();
+	}
+	return hooks.$injector.get('$location').absUrl();
 };
 
 /**
@@ -811,18 +814,18 @@ functions.getLocationAbsUrl = function(selector) {
  *     /path?search=a&b=c#hash
  */
 functions.setLocation = function(selector, url) {
-  var hooks = getNg1Hooks(selector);
-  if (angular.getTestability) {
-    return hooks.$$testability.setLocation(url);
-  }
-  var $injector = hooks.$injector;
-  var $location = $injector.get('$location');
-  var $rootScope = $injector.get('$rootScope');
+	var hooks = getNg1Hooks(selector);
+	if (angular.getTestability) {
+		return hooks.$$testability.setLocation(url);
+	}
+	var $injector = hooks.$injector;
+	var $location = $injector.get('$location');
+	var $rootScope = $injector.get('$rootScope');
 
-  if (url !== $location.url()) {
-    $location.url(url);
-    $rootScope.$digest();
-  }
+	if (url !== $location.url()) {
+		$location.url(url);
+		$rootScope.$digest();
+	}
 };
 
 /**
@@ -832,15 +835,16 @@ functions.setLocation = function(selector, url) {
  * @return {!Array<!Object>} An array of pending http requests.
  */
 functions.getPendingHttpRequests = function(selector) {
-  var hooks = getNg1Hooks(selector, true);
-  var $http = hooks.$injector.get('$http');
-  return $http.pendingRequests;
+	var hooks = getNg1Hooks(selector, true);
+	var $http = hooks.$injector.get('$http');
+	return $http.pendingRequests;
 };
 
-['waitForAngular', 'findBindings', 'findByModel', 'getLocationAbsUrl',
-  'setLocation', 'getPendingHttpRequests'].forEach(function(funName) {
-    functions[funName] = wrapWithHelpers(functions[funName], getNg1Hooks);
-});
+['waitForAngular', 'findBindings', 'findByModel', 'getLocationAbsUrl', 'setLocation', 'getPendingHttpRequests'].forEach(
+	function(funName) {
+		functions[funName] = wrapWithHelpers(functions[funName], getNg1Hooks);
+	}
+);
 
 /* Publish all the functions as strings to pass to WebDriver's
  * exec[Async]Script.  In addition, also include a script that will
@@ -855,18 +859,16 @@ functions.getPendingHttpRequests = function(selector) {
  */
 var util = require('util');
 var scriptsList = [];
-var scriptFmt = (
-    'try { return (%s).apply(this, arguments); }\n' +
-    'catch(e) { throw (e instanceof Error) ? e : new Error(e); }');
+var scriptFmt =
+	'try { return (%s).apply(this, arguments); }\n' + 'catch(e) { throw (e instanceof Error) ? e : new Error(e); }';
 for (var fnName in functions) {
-  if (functions.hasOwnProperty(fnName)) {
-    exports[fnName] = util.format(scriptFmt, functions[fnName]);
-    scriptsList.push(util.format('%s: %s', fnName, functions[fnName]));
-  }
+	if (functions.hasOwnProperty(fnName)) {
+		exports[fnName] = util.format(scriptFmt, functions[fnName]);
+		scriptsList.push(util.format('%s: %s', fnName, functions[fnName]));
+	}
 }
 
-exports.installInBrowser = (util.format(
-    'window.clientSideScripts = {%s};', scriptsList.join(', ')));
+exports.installInBrowser = util.format('window.clientSideScripts = {%s};', scriptsList.join(', '));
 
 /**
  * Automatically installed by Protractor when a page is loaded, this
@@ -876,64 +878,63 @@ exports.installInBrowser = (util.format(
  * @param {boolean} trackOutstandingTimeouts
  */
 exports.protractorBaseModuleFn = function(trackOutstandingTimeouts) {
-  var ngMod = angular.module('protractorBaseModule_', []).config([
-    '$compileProvider',
-    function($compileProvider) {
-      if ($compileProvider.debugInfoEnabled) {
-        $compileProvider.debugInfoEnabled(true);
-      }
-    }
-  ]);
-  if (trackOutstandingTimeouts) {
-    ngMod.config([
-      '$provide',
-      function ($provide) {
-        $provide.decorator('$timeout', [
-          '$delegate',
-          function ($delegate) {
-            var $timeout = $delegate;
+	var ngMod = angular.module('protractorBaseModule_', []).config([
+		'$compileProvider',
+		function($compileProvider) {
+			if ($compileProvider.debugInfoEnabled) {
+				$compileProvider.debugInfoEnabled(true);
+			}
+		},
+	]);
+	if (trackOutstandingTimeouts) {
+		ngMod.config([
+			'$provide',
+			function($provide) {
+				$provide.decorator('$timeout', [
+					'$delegate',
+					function($delegate) {
+						var $timeout = $delegate;
 
-            var taskId = 0;
+						var taskId = 0;
 
-            if (!window['NG_PENDING_TIMEOUTS']) {
-              window['NG_PENDING_TIMEOUTS'] = {};
-            }
+						if (!window['NG_PENDING_TIMEOUTS']) {
+							window['NG_PENDING_TIMEOUTS'] = {};
+						}
 
-            var extendedTimeout= function() {
-              var args = Array.prototype.slice.call(arguments);
-              if (typeof(args[0]) !== 'function') {
-                return $timeout.apply(null, args);
-              }
+						var extendedTimeout = function() {
+							var args = Array.prototype.slice.call(arguments);
+							if (typeof args[0] !== 'function') {
+								return $timeout.apply(null, args);
+							}
 
-              taskId++;
-              var fn = args[0];
-              window['NG_PENDING_TIMEOUTS'][taskId] =
-                  fn.toString();
-              var wrappedFn = (function(taskId_) {
-                return function() {
-                  delete window['NG_PENDING_TIMEOUTS'][taskId_];
-                  return fn.apply(null, arguments);
-                };
-              })(taskId);
-              args[0] = wrappedFn;
+							taskId++;
+							var fn = args[0];
+							window['NG_PENDING_TIMEOUTS'][taskId] = fn.toString();
+							var wrappedFn = (function(taskId_) {
+								return function() {
+									delete window['NG_PENDING_TIMEOUTS'][taskId_];
+									return fn.apply(null, arguments);
+								};
+							})(taskId);
+							args[0] = wrappedFn;
 
-              var promise = $timeout.apply(null, args);
-              promise.ptorTaskId_ = taskId;
-              return promise;
-            };
+							var promise = $timeout.apply(null, args);
+							promise.ptorTaskId_ = taskId;
+							return promise;
+						};
 
-            extendedTimeout.cancel = function() {
-              var taskId_ = arguments[0] && arguments[0].ptorTaskId_;
-              if (taskId_) {
-                delete window['NG_PENDING_TIMEOUTS'][taskId_];
-              }
-              return $timeout.cancel.apply($timeout, arguments);
-            };
+						extendedTimeout.cancel = function() {
+							var taskId_ = arguments[0] && arguments[0].ptorTaskId_;
+							if (taskId_) {
+								delete window['NG_PENDING_TIMEOUTS'][taskId_];
+							}
+							return $timeout.cancel.apply($timeout, arguments);
+						};
 
-            return extendedTimeout;
-          }
-        ]);
-      }
-    ]);
-  }
+						return extendedTimeout;
+					},
+				]);
+			},
+		]);
+	}
 };

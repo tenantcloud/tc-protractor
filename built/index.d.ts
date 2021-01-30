@@ -3,7 +3,25 @@ import { ElementArrayFinder, ElementFinder } from './element';
 import { ProtractorExpectedConditions } from './expectedConditions';
 import { ProtractorBy } from './locators';
 import { Ptor } from './ptor';
-export { ActionSequence, Browser, Builder, Button, Capabilities, Capability, error, EventEmitter, FileDetector, Key, logging, promise, Session, until, WebDriver, WebElement, WebElementPromise } from 'selenium-webdriver';
+export {
+	ActionSequence,
+	Browser,
+	Builder,
+	Button,
+	Capabilities,
+	Capability,
+	error,
+	EventEmitter,
+	FileDetector,
+	Key,
+	logging,
+	promise,
+	Session,
+	until,
+	WebDriver,
+	WebElement,
+	WebElementPromise,
+} from 'selenium-webdriver';
 export { ElementHelper, ProtractorBrowser } from './browser';
 export { Config } from './config';
 export { ElementArrayFinder, ElementFinder } from './element';
@@ -13,9 +31,9 @@ export { PluginConfig, ProtractorPlugin } from './plugins';
 export { Ptor } from './ptor';
 export { Runner } from './runner';
 export declare let utils: {
-    firefox: any;
-    http: any;
-    remote: any;
+	firefox: any;
+	http: any;
+	remote: any;
 };
 export declare let Command: any;
 export declare let CommandName: any;

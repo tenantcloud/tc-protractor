@@ -1,11 +1,11 @@
 var REPL_INITIAL_SUGGESTIONS = [
-  'element(by.id(\'\'))',
-  'element(by.css(\'\'))',
-  'element(by.name(\'\'))',
-  'element(by.binding(\'\'))',
-  'element(by.xpath(\'\'))',
-  'element(by.tagName(\'\'))',
-  'element(by.className(\'\'))'
+	"element(by.id(''))",
+	"element(by.css(''))",
+	"element(by.name(''))",
+	"element(by.binding(''))",
+	"element(by.xpath(''))",
+	"element(by.tagName(''))",
+	"element(by.className(''))",
 ];
 
 /**
@@ -15,8 +15,8 @@ var REPL_INITIAL_SUGGESTIONS = [
  * @constructor
  */
 var CommandRepl = function(client) {
-  this.client = client;
-  this.prompt = '> ';
+	this.client = client;
+	this.prompt = '> ';
 };
 
 /**
@@ -28,10 +28,10 @@ var CommandRepl = function(client) {
  * @param {function} callback
  */
 CommandRepl.prototype.stepEval = function(expression, callback) {
-  expression = expression.replace(/"/g, '\\\"');
+	expression = expression.replace(/"/g, '\\"');
 
-  var expr = 'browser.debugHelper.dbgCodeExecutor.execute("' + expression + '")';
-  this.evaluate_(expr, callback);
+	var expr = 'browser.debugHelper.dbgCodeExecutor.execute("' + expression + '")';
+	this.evaluate_(expr, callback);
 };
 
 /**
@@ -43,18 +43,18 @@ CommandRepl.prototype.stepEval = function(expression, callback) {
  * @param {function} callback
  */
 CommandRepl.prototype.complete = function(line, callback) {
-  if (line === '') {
-    callback(null, [REPL_INITIAL_SUGGESTIONS, '']);
-  } else {
-    // TODO(juliemr): This is freezing the program!
-    line = line.replace(/"/g, '\\\"');
-    var expr = 'browser.debugHelper.dbgCodeExecutor.complete("' + line + '")';
-    this.evaluate_(expr, function(err, res) {
-      // Result is a JSON representation of the autocomplete response. 
-      var result = res === undefined ? undefined : JSON.parse(res);
-      callback(err, result);
-    });
-  }
+	if (line === '') {
+		callback(null, [REPL_INITIAL_SUGGESTIONS, '']);
+	} else {
+		// TODO(juliemr): This is freezing the program!
+		line = line.replace(/"/g, '\\"');
+		var expr = 'browser.debugHelper.dbgCodeExecutor.complete("' + line + '")';
+		this.evaluate_(expr, function(err, res) {
+			// Result is a JSON representation of the autocomplete response.
+			var result = res === undefined ? undefined : JSON.parse(res);
+			callback(err, result);
+		});
+	}
 };
 
 /**
@@ -67,61 +67,75 @@ CommandRepl.prototype.complete = function(line, callback) {
  * @param {function} callback
  */
 CommandRepl.prototype.evaluate_ = function(expression, callback) {
-  var self = this;
-  var onbreak_ = function() {
-    self.client.req({
-      command: 'evaluate',
-      arguments: {
-        frame: 0,
-        maxStringLength: 1000,
-        expression: 'browser.debugHelper.dbgCodeExecutor.resultReady()'
-      }
-    }, function(err, res) {
-      if (err) {
-        throw new Error('Error while checking if debugger expression result was ready.' + 
-            'Expression: ' + expression + ' Error: ' + err);
-      }
-      // If code finished executing, get result.
-      if (res.value) {
-        self.client.req({
-          command: 'evaluate',
-          arguments: {
-            frame: 0,
-            maxStringLength: -1,
-            expression: 'browser.debugHelper.dbgCodeExecutor.getResult()'
-          }
-        }, function(err, res) {
-          try {
-            callback(err, res.value);
-          } catch (e) {
-            callback(e, undefined);
-          }
-          self.client.removeListener('break', onbreak_);
-        });
-      } else {
-        // If we need more loops for the code to finish executing, continue
-        // until the next execute step.
-        self.client.reqContinue(function() {
-          // Intentionally blank.
-        });
-      }
-    });
-  };
+	var self = this;
+	var onbreak_ = function() {
+		self.client.req(
+			{
+				command: 'evaluate',
+				arguments: {
+					frame: 0,
+					maxStringLength: 1000,
+					expression: 'browser.debugHelper.dbgCodeExecutor.resultReady()',
+				},
+			},
+			function(err, res) {
+				if (err) {
+					throw new Error(
+						'Error while checking if debugger expression result was ready.' +
+							'Expression: ' +
+							expression +
+							' Error: ' +
+							err
+					);
+				}
+				// If code finished executing, get result.
+				if (res.value) {
+					self.client.req(
+						{
+							command: 'evaluate',
+							arguments: {
+								frame: 0,
+								maxStringLength: -1,
+								expression: 'browser.debugHelper.dbgCodeExecutor.getResult()',
+							},
+						},
+						function(err, res) {
+							try {
+								callback(err, res.value);
+							} catch (e) {
+								callback(e, undefined);
+							}
+							self.client.removeListener('break', onbreak_);
+						}
+					);
+				} else {
+					// If we need more loops for the code to finish executing, continue
+					// until the next execute step.
+					self.client.reqContinue(function() {
+						// Intentionally blank.
+					});
+				}
+			}
+		);
+	};
 
-  this.client.on('break', onbreak_);
+	this.client.on('break', onbreak_);
 
-  this.client.req({
-    command: 'evaluate',
-    arguments: {
-      frame: 0,
-      maxStringLength: 1000,
-      expression: expression
-    }
-  }, function() {
-    self.client.reqContinue(function() {
-      // Intentionally blank.
-    });
-  });
+	this.client.req(
+		{
+			command: 'evaluate',
+			arguments: {
+				frame: 0,
+				maxStringLength: 1000,
+				expression: expression,
+			},
+		},
+		function() {
+			self.client.reqContinue(function() {
+				// Intentionally blank.
+			});
+		}
+	);
 };
 
 module.exports = CommandRepl;

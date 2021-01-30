@@ -1,6 +1,6 @@
 var util = require('util'),
-    q = require('q'),
-    Logger = require('../logger').Logger;
+	q = require('q'),
+	Logger = require('../logger').Logger;
 
 var logger = new Logger('debugger');
 
@@ -13,10 +13,10 @@ var logger = new Logger('debugger');
  * @return {q.Promise} Promise resolved with the test results
  */
 exports.run = function(runner, specs) {
-  return q.promise(function(resolve) {
-    logger.info('Resolved spec files: ' + util.inspect(specs));
-    resolve({
-      failedCount: 0
-    });
-  });
+	return q.promise(function(resolve) {
+		logger.info('Resolved spec files: ' + util.inspect(specs));
+		resolve({
+			failedCount: 0,
+		});
+	});
 };

@@ -8,17 +8,17 @@ var q = require('q');
  * @return {q.Promise} Promise resolved with the test results
  */
 exports.run = function(runner) {
-  /* globals browser */
-  return q.promise(function(resolve) {
-    if (runner.getConfig().baseUrl) {
-      browser.get(runner.getConfig().baseUrl);
-    }
-    browser.executeScriptWithDescription('var e = 0', 'starting explorer hook');  
-    browser.enterRepl();
-    browser.executeScriptWithDescription('var e = 1', 'done with explorer hook').then(function() {
-      resolve({
-        failedCount: 0
-      });
-    });
-  });
+	/* globals browser */
+	return q.promise(function(resolve) {
+		if (runner.getConfig().baseUrl) {
+			browser.get(runner.getConfig().baseUrl);
+		}
+		browser.executeScriptWithDescription('var e = 0', 'starting explorer hook');
+		browser.enterRepl();
+		browser.executeScriptWithDescription('var e = 1', 'done with explorer hook').then(function() {
+			resolve({
+				failedCount: 0,
+			});
+		});
+	});
 };

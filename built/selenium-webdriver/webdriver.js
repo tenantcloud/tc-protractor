@@ -353,7 +353,7 @@ webdriver.WebDriver.prototype.takeScreenshot = function() {};
  * @return {!TargetLocator} The target locator interface for this
  *     instance.
  */
-webdriver.WebDriver.prototype.switchTo = function() {}
+webdriver.WebDriver.prototype.switchTo = function() {};
 
 // /////////////////////////////////////////////////////////////////////////////
 // //
@@ -396,7 +396,6 @@ webdriver.WebElement = function(driver, id) {};
  */
 webdriver.WebElement.prototype.getDriver = function() {};
 
-
 /**
  * Gets the WebDriver ID string representation for this web element.
  *
@@ -429,7 +428,6 @@ webdriver.WebElement.prototype.getId = function() {};
  */
 webdriver.WebElement.prototype.findElement = function(subLocator) {};
 
-
 /**
  * Schedules a command to click on this element.
  *
@@ -447,7 +445,6 @@ webdriver.WebElement.prototype.findElement = function(subLocator) {};
  *     when the click command has completed.
  */
 webdriver.WebElement.prototype.click = function() {};
-
 
 /**
  * Schedules a command to type a sequence on the DOM element represented by this
@@ -504,7 +501,6 @@ webdriver.WebElement.prototype.click = function() {};
  */
 webdriver.WebElement.prototype.sendKeys = function(var_args) {};
 
-
 /**
  * Gets the tag/node name of this element.
  *
@@ -518,7 +514,6 @@ webdriver.WebElement.prototype.sendKeys = function(var_args) {};
  *     resolved with the element's tag name.
  */
 webdriver.WebElement.prototype.getTagName = function() {};
-
 
 /**
  * Gets the computed style of an element. If the element inherits the named
@@ -541,7 +536,6 @@ webdriver.WebElement.prototype.getTagName = function() {};
  *     resolved with the requested CSS value.
  */
 webdriver.WebElement.prototype.getCssValue = function(cssStyleProperty) {};
-
 
 /**
  * Schedules a command to query for the value of the given attribute of the
@@ -581,7 +575,6 @@ webdriver.WebElement.prototype.getCssValue = function(cssStyleProperty) {};
  */
 webdriver.WebElement.prototype.getAttribute = function(attributeName) {};
 
-
 /**
  * Get the visible innerText of this element, including sub-elements, without
  * any leading or trailing whitespace. Visible elements are not hidden by CSS.
@@ -597,7 +590,6 @@ webdriver.WebElement.prototype.getAttribute = function(attributeName) {};
  *     resolved with the element's visible text.
  */
 webdriver.WebElement.prototype.getText = function() {};
-
 
 /**
  * Schedules a command to compute the size of this element's bounding box, in
@@ -621,7 +613,6 @@ webdriver.WebElement.prototype.getText = function() {};
  */
 webdriver.WebElement.prototype.getSize = function() {};
 
-
 /**
  * Schedules a command to compute the location of this element in page space.
  *
@@ -643,7 +634,6 @@ webdriver.WebElement.prototype.getSize = function() {};
  */
 webdriver.WebElement.prototype.getLocation = function() {};
 
-
 /**
  * Schedules a command to query whether the DOM element represented by this
  * instance is enabled, as dicted by the {@code disabled} attribute.
@@ -659,7 +649,6 @@ webdriver.WebElement.prototype.getLocation = function() {};
  *     resolved with whether this element is currently enabled.
  */
 webdriver.WebElement.prototype.isEnabled = function() {};
-
 
 /**
  * Schedules a command to query whether this element is selected.
@@ -677,7 +666,6 @@ webdriver.WebElement.prototype.isEnabled = function() {};
  *     resolved with whether this element is currently selected.
  */
 webdriver.WebElement.prototype.isSelected = function() {};
-
 
 /**
  * Schedules a command to submit the form containing this element (or this
@@ -698,7 +686,6 @@ webdriver.WebElement.prototype.isSelected = function() {};
  */
 webdriver.WebElement.prototype.submit = function() {};
 
-
 /**
  * Schedules a command to clear the {@code value} of this element. This command
  * has no effect if the underlying DOM element is neither a text INPUT element
@@ -718,7 +705,6 @@ webdriver.WebElement.prototype.submit = function() {};
  */
 webdriver.WebElement.prototype.clear = function() {};
 
-
 /**
  * Schedules a command to test whether this element is currently displayed.
  *
@@ -733,7 +719,6 @@ webdriver.WebElement.prototype.clear = function() {};
  *     resolved with whether this element is currently visible on the page.
  */
 webdriver.WebElement.prototype.isDisplayed = function() {};
-
 
 /**
  * Take a screenshot of the visible region encompassed by this element's

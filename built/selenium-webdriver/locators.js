@@ -35,7 +35,6 @@ webdriver.By = {};
  */
 webdriver.By.className = webdriver.Locator.factory_('class name');
 
-
 /**
  * Locates elements using a CSS selector. For browsers that do not support
  * CSS selectors, WebDriver implementations may return an
@@ -59,7 +58,6 @@ webdriver.By.className = webdriver.Locator.factory_('class name');
  */
 webdriver.By.css = webdriver.Locator.factory_('css selector');
 
-
 /**
  * Locates an element by its ID.
  *
@@ -79,7 +77,6 @@ webdriver.By.css = webdriver.Locator.factory_('css selector');
  */
 webdriver.By.id = webdriver.Locator.factory_('id');
 
-
 /**
  * Locates link elements whose {@linkplain webdriver.WebElement#getText visible
  * text} matches the given string.
@@ -94,7 +91,6 @@ webdriver.By.id = webdriver.Locator.factory_('id');
  * @returns {!webdriver.Locator} The new locator.
  */
 webdriver.By.linkText = webdriver.Locator.factory_('link text');
-
 
 /**
  * Locates an elements by evaluating a JavaScript expression, which may
@@ -128,7 +124,6 @@ webdriver.By.linkText = webdriver.Locator.factory_('link text');
  */
 webdriver.By.js = function(script, var_args) {};
 
-
 /**
  * Locates elements whose {@code name} attribute has the given value.
  *
@@ -148,7 +143,6 @@ webdriver.By.js = function(script, var_args) {};
  */
 webdriver.By.name = webdriver.Locator.factory_('name');
 
-
 /**
  * Locates link elements whose {@linkplain webdriver.WebElement#getText visible
  * text} contains the given substring.
@@ -167,9 +161,7 @@ webdriver.By.name = webdriver.Locator.factory_('name');
  * @param {string} text The substring to check for in a link's visible text.
  * @returns {!webdriver.Locator} The new locator.
  */
-webdriver.By.partialLinkText = webdriver.Locator.factory_(
-    'partial link text');
-
+webdriver.By.partialLinkText = webdriver.Locator.factory_('partial link text');
 
 /**
  * Locates elements with a given tag name. The returned locator is
@@ -188,7 +180,6 @@ webdriver.By.partialLinkText = webdriver.Locator.factory_(
  * @see http://www.w3.org/TR/REC-DOM-Level-1/level-one-core.html
  */
 webdriver.By.tagName = webdriver.Locator.factory_('tag name');
-
 
 /**
  * Locates elements matching a XPath selector. Care should be taken when

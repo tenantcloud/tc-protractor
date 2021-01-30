@@ -4,7 +4,7 @@
 var hooks = require('./setupAfterEach').hooks;
 
 afterEach(function() {
-  if (hooks.afterEach) { 
-    return hooks.afterEach();
-  }
+	if (hooks.afterEach) {
+		return hooks.afterEach();
+	}
 });

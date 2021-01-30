@@ -101,7 +101,7 @@ class TaskScheduler {
 				++queue.numRunningInstances;
 				let taskId = '' + rotatedIndex + 1;
 				// if (queue.specLists.length > 1) {
-					taskId += '-' + queue.specsIndex;
+				taskId += '-' + queue.specsIndex;
 				// }
 				let specs = queue.specLists[queue.specsIndex];
 				++queue.specsIndex;

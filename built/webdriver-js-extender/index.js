@@ -40,7 +40,7 @@ webdriver_extensions.ExtendedWebDriver = function() {};
  * `selenium-webdriver` are not re-implemented by `webdriver-js-extender`.
  *
  * See the [GitHub repo](https://github.com/angular/webdriver-js-extender) for
- * details. 
+ * details.
  *
  * @returns {!webdriver.promise.Promise.<*>}
  */
